@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Waktu pembuatan: 18 Sep 2026 pada 05.07
+-- Waktu pembuatan: 18 Sep 2026 pada 05.41
 -- Versi server: 10.4.32-MariaDB
 -- Versi PHP: 8.2.12
 
@@ -31,7 +31,7 @@ CREATE TABLE `lapangan` (
   `id` int(11) NOT NULL,
   `nama_lapangan` varchar(100) NOT NULL,
   `jenis_olahraga` varchar(50) NOT NULL,
-  `lokasi` varchar(150) NOT NULL,
+  `lokasi` varchar(500) NOT NULL,
   `harga` int(11) NOT NULL,
   `pengguna_id` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -41,7 +41,8 @@ CREATE TABLE `lapangan` (
 --
 
 INSERT INTO `lapangan` (`id`, `nama_lapangan`, `jenis_olahraga`, `lokasi`, `harga`, `pengguna_id`) VALUES
-(2, 'Adnyana', 'Futsal', 'Denpasar', 50000, 1);
+(2, 'Adnyana', 'Futsal', 'Denpasar', 50000, 1),
+(3, 'Lapangan B', 'Bulutangkis', 'ENC:ZCTJjDWLJQZf3lGpi+Pvay9PBlSoTuv/vb04wxoeEKQ=', 75000, 3);
 
 -- --------------------------------------------------------
 
@@ -61,7 +62,8 @@ CREATE TABLE `pengguna` (
 --
 
 INSERT INTO `pengguna` (`id`, `nama`, `email`, `password`) VALUES
-(1, 'Adnyana Wijaya', 'Adnyana12@gmail.com', '$2y$10$lhG/LlylDo7TTSiDRbuOGuKN6dFMmey0TugkbpKZ0K0Pso2pv0Vma');
+(1, 'Adnyana Wijaya', 'Adnyana12@gmail.com', '$2y$10$lhG/LlylDo7TTSiDRbuOGuKN6dFMmey0TugkbpKZ0K0Pso2pv0Vma'),
+(3, 'Riski Sanjaya', 'riskisanjaya@gmail.com', '$2y$10$QHXIL3y7fAMCr8JHwPjRIuXu6Lt4slzL4NoNLk1wOpIsLo6uGX9oa');
 
 --
 -- Indexes for dumped tables
@@ -89,13 +91,13 @@ ALTER TABLE `pengguna`
 -- AUTO_INCREMENT untuk tabel `lapangan`
 --
 ALTER TABLE `lapangan`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT untuk tabel `pengguna`
 --
 ALTER TABLE `pengguna`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- Ketidakleluasaan untuk tabel pelimpahan (Dumped Tables)

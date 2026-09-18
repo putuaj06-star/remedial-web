@@ -2,6 +2,80 @@
 
 require_once "config/database.php";
 
+
+/* =========================
+   FUNGSI ENKRIPSI
+========================= */
+
+function encryptData($data, $key)
+{
+    $cipher = "AES-256-CBC";
+
+    $iv_length = openssl_cipher_iv_length($cipher);
+
+    $iv = random_bytes($iv_length);
+
+    $encrypted = openssl_encrypt(
+        $data,
+        $cipher,
+        hash('sha256', $key, true),
+        OPENSSL_RAW_DATA,
+        $iv
+    );
+
+    return "ENC:" . base64_encode($iv . $encrypted);
+}
+
+
+/* =========================
+   FUNGSI DEKRIPSI
+========================= */
+
+function decryptData($data, $key)
+{
+    // Data lama yang belum terenkripsi
+    if (strpos($data, "ENC:") !== 0) {
+        return $data;
+    }
+
+    $cipher = "AES-256-CBC";
+
+    $decoded = base64_decode(
+        substr($data, 4),
+        true
+    );
+
+    if ($decoded === false) {
+        return $data;
+    }
+
+    $iv_length = openssl_cipher_iv_length($cipher);
+
+    $iv = substr(
+        $decoded,
+        0,
+        $iv_length
+    );
+
+    $encrypted = substr(
+        $decoded,
+        $iv_length
+    );
+
+    $decrypted = openssl_decrypt(
+        $encrypted,
+        $cipher,
+        hash('sha256', $key, true),
+        OPENSSL_RAW_DATA,
+        $iv
+    );
+
+    return $decrypted !== false
+        ? $decrypted
+        : "";
+}
+
+
 /* =========================
    TAMBAH DATA
 ========================= */
@@ -26,6 +100,12 @@ if (isset($_POST['tambah'])) {
 
     } else {
 
+        // Enkripsi lokasi sebelum disimpan ke database
+        $lokasi_encrypted = encryptData(
+            $lokasi,
+            $encryption_key
+        );
+
         $stmt = $conn->prepare(
             "INSERT INTO lapangan
             (nama_lapangan, jenis_olahraga, lokasi, harga, pengguna_id)
@@ -36,7 +116,7 @@ if (isset($_POST['tambah'])) {
             "sssii",
             $nama_lapangan,
             $jenis_olahraga,
-            $lokasi,
+            $lokasi_encrypted,
             $harga,
             $pengguna_id
         );
@@ -79,6 +159,12 @@ if (isset($_POST['update'])) {
 
     } else {
 
+        // Enkripsi lokasi sebelum update database
+        $lokasi_encrypted = encryptData(
+            $lokasi,
+            $encryption_key
+        );
+
         $stmt = $conn->prepare(
             "UPDATE lapangan
              SET nama_lapangan = ?,
@@ -93,7 +179,7 @@ if (isset($_POST['update'])) {
             "sssiii",
             $nama_lapangan,
             $jenis_olahraga,
-            $lokasi,
+            $lokasi_encrypted,
             $harga,
             $pengguna_id,
             $id
@@ -163,6 +249,15 @@ if (isset($_GET['edit'])) {
     $result = $stmt->get_result();
 
     $edit = $result->fetch_assoc();
+
+    // Dekripsi lokasi untuk ditampilkan di form edit
+    if ($edit) {
+
+        $edit['lokasi'] = decryptData(
+            $edit['lokasi'],
+            $encryption_key
+        );
+    }
 }
 
 
@@ -205,15 +300,22 @@ $data = $conn->query(
 
     <meta charset="UTF-8">
 
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
 
     <title>Data Lapangan</title>
 
+    <!-- Bootstrap -->
     <link
         href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
         rel="stylesheet"
     >
+
+    <!-- CSS -->
     <link rel="stylesheet" href="style.css">
+
 </head>
 
 <body>
@@ -229,6 +331,8 @@ $data = $conn->query(
     <hr>
 
 
+    <!-- ERROR -->
+
     <?php if (isset($error)) : ?>
 
         <div class="alert alert-danger">
@@ -241,7 +345,7 @@ $data = $conn->query(
 
 
     <!-- =========================
-         FORM TAMBAH
+         FORM EDIT
     ========================== -->
 
     <?php if ($edit) : ?>
@@ -376,6 +480,11 @@ $data = $conn->query(
 
 
     <?php else : ?>
+
+
+        <!-- =========================
+             FORM TAMBAH
+        ========================== -->
 
         <h2>Tambah Lapangan</h2>
 
@@ -513,17 +622,11 @@ $data = $conn->query(
                 <tr>
 
                     <th>ID</th>
-
                     <th>Nama Lapangan</th>
-
                     <th>Jenis Olahraga</th>
-
                     <th>Lokasi</th>
-
                     <th>Harga</th>
-
                     <th>Pengguna</th>
-
                     <th>Aksi</th>
 
                 </tr>
@@ -541,25 +644,45 @@ $data = $conn->query(
                         <?= htmlspecialchars($row['id']) ?>
                     </td>
 
+
                     <td>
                         <?= htmlspecialchars($row['nama_lapangan']) ?>
                     </td>
+
 
                     <td>
                         <?= htmlspecialchars($row['jenis_olahraga']) ?>
                     </td>
 
-                    <td>
-                        <?= htmlspecialchars($row['lokasi']) ?>
-                    </td>
 
                     <td>
-                        Rp <?= number_format($row['harga'], 0, ',', '.') ?>
+
+                        <?= htmlspecialchars(
+                            decryptData(
+                                $row['lokasi'],
+                                $encryption_key
+                            )
+                        ) ?>
+
                     </td>
+
+
+                    <td>
+
+                        Rp <?= number_format(
+                            $row['harga'],
+                            0,
+                            ',',
+                            '.'
+                        ) ?>
+
+                    </td>
+
 
                     <td>
                         <?= htmlspecialchars($row['nama_pengguna']) ?>
                     </td>
+
 
                     <td>
 
